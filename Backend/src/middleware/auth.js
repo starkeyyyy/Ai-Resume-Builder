@@ -12,7 +12,7 @@ const isUserAvailable = async (req, res, next) => {
 
   try {
     const decodedToken = await jwt.verify(token, process.env.JWT_SECRET_KEY);
-    const user = await User.findById(decodedToken.id);
+    const user = await User.findByPk(decodedToken.id);
 
     if (!user) {
       return res.status(404).json(new ApiError(404, "User not found."));

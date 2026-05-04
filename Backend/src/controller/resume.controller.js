@@ -11,7 +11,6 @@ const start = async (req, res) => {
 const createResume = async (req, res) => {
   const { title, themeColor } = req.body;
 
-  // Validate that the title and themeColor are provided
   if (!title || !themeColor) {
     return res
       .status(400)
@@ -19,11 +18,10 @@ const createResume = async (req, res) => {
   }
 
   try {
-    // Create a new resume with empty fields for other attributes
     const resume = await Resume.create({
       title,
       themeColor,
-      user: req.user._id, // Set the user ID from the authenticated user
+      userId: req.user.id,
       firstName: "",
       lastName: "",
       email: "",
@@ -32,7 +30,7 @@ const createResume = async (req, res) => {
       phone: "",
       address: "",
       experience: [],
-      education: [], // Initialize as an empty array
+      education: [],
       skills: [],
       projects: [],
     });
@@ -52,7 +50,7 @@ const createResume = async (req, res) => {
 
 const getALLResume = async (req, res) => {
   try {
-    const resumes = await Resume.find({ user: req.user });
+    const resumes = await Resume.findAll({ where: { userId: req.user.id } });
     return res
       .status(200)
       .json(new ApiResponse(200, resumes, "Resumes fetched successfully"));
@@ -68,19 +66,17 @@ const getResume = async (req, res) => {
   try {
     const { id } = req.query;
 
-    if (!id) {
-      return res.status(400).json(new ApiError(400, "Resume ID is required."));
+    if (!id || id === 'undefined') {
+      return res.status(400).json(new ApiError(400, "Valid Resume ID is required."));
     }
 
-    // Find the resume by ID
-    const resume = await Resume.findById(id);
+    const resume = await Resume.findByPk(id);
 
     if (!resume) {
       return res.status(404).json(new ApiError(404, "Resume not found."));
     }
 
-    // Check if the resume belongs to the current user
-    if (resume.user.toString() !== req.user._id.toString()) {
+    if (resume.userId !== req.user.id) {
       return res
         .status(403)
         .json(
@@ -100,26 +96,33 @@ const getResume = async (req, res) => {
 };
 
 const updateResume = async (req, res) => {
-  console.log("Resume update request received:");
   const id = req.query.id;
 
-  try {
-    // Find and update the resume with the provided ID and user ID
-    console.log("Database update request started");
-    const updatedResume = await Resume.findOneAndUpdate(
-      { _id: id, user: req.user._id },
-      { $set: req.body, $currentDate: { updatedAt: true } }, // Set updatedAt to current date
-      { new: true } // Return the modified document
-    );
+  if (!id || id === 'undefined') {
+    return res.status(400).json(new ApiError(400, "Valid Resume ID is required. Check if the URL has a valid ID."));
+  }
 
-    if (!updatedResume) {
-      console.log("Resume not found or unauthorized");
+  try {
+    // Clean up req.body to remove fields that shouldn't be updated directly
+    const updateData = { ...req.body };
+    delete updateData.id;
+    delete updateData._id;
+    delete updateData.userId;
+    delete updateData.user;
+    delete updateData.createdAt;
+    delete updateData.updatedAt;
+
+    const [updatedRowsCount] = await Resume.update(updateData, {
+      where: { id: id, userId: req.user.id }
+    });
+
+    if (updatedRowsCount === 0) {
       return res
         .status(404)
         .json(new ApiResponse(404, null, "Resume not found or unauthorized"));
     }
 
-    console.log("Resume updated successfully:");
+    const updatedResume = await Resume.findByPk(id);
 
     return res
       .status(200)
@@ -132,21 +135,21 @@ const updateResume = async (req, res) => {
         new ApiError(500, "Internal Server Error", [error.message], error.stack)
       );
   }
-
-  // return res.status(200).json({ message: "Hello World" });
 };
 
 const removeResume = async (req, res) => {
   const id = req.query.id;
 
+  if (!id || id === 'undefined') {
+    return res.status(400).json(new ApiError(400, "Valid Resume ID is required."));
+  }
+
   try {
-    // Check if the resume exists and belongs to the current user
-    const resume = await Resume.findOneAndDelete({
-      _id: id,
-      user: req.user._id,
+    const deletedRowsCount = await Resume.destroy({
+      where: { id: id, userId: req.user.id }
     });
 
-    if (!resume) {
+    if (deletedRowsCount === 0) {
       return res
         .status(404)
         .json(

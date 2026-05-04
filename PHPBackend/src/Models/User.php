@@ -2,13 +2,12 @@
 
 namespace App\Models;
 
-use MongoDB\Laravel\Eloquent\Model;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
 
 class User extends Model
 {
-    protected $connection = 'mongodb';
-    protected $collection = 'users';
+    protected $table = 'users';
 
     protected $fillable = [
         'fullName',

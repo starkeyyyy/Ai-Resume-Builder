@@ -2,12 +2,11 @@
 
 namespace App\Models;
 
-use MongoDB\Laravel\Eloquent\Model;
+use Illuminate\Database\Eloquent\Model;
 
 class Resume extends Model
 {
-    protected $connection = 'mongodb';
-    protected $collection = 'resumes';
+    protected $table = 'resumes';
 
     protected $fillable = [
         'firstName',

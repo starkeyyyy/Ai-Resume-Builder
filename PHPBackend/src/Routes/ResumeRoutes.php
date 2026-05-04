@@ -10,7 +10,7 @@ class ResumeRoutes
 {
     public static function register(App $app)
     {
-        $app->group('/api/resume', function ($group) {
+        $app->group('/api/resumes', function ($group) {
             $group->get('/', [ResumeController::class, 'start']);
             $group->post('/createResume', [ResumeController::class, 'createResume'])->add(new AuthMiddleware());
             $group->get('/getAllResume', [ResumeController::class, 'getAllResumes'])->add(new AuthMiddleware());

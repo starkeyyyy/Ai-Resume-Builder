@@ -2,7 +2,7 @@ import axios from "axios";
 import { VITE_APP_URL } from "@/config/config";
 
 const axiosInstance = axios.create({
-  baseURL: VITE_APP_URL + "api/",
+  baseURL: "http://localhost:5001/" + "api/",
   headers: {
     "Content-Type": "application/json",
   },

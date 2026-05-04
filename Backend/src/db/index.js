@@ -1,17 +1,32 @@
-import mongoose from "mongoose";
-import { ApiError } from "../utils/ApiError.js";
+import { Sequelize } from "sequelize";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const sequelize = new Sequelize(
+  process.env.DB_NAME || "resume_builder",
+  process.env.DB_USER || "root",
+  process.env.DB_PASSWORD || "",
+  {
+    host: process.env.DB_HOST || "127.0.0.1",
+    dialect: "mysql",
+    logging: false, // Set to console.log to see SQL queries
+  }
+);
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      dbName: "ai_resume_builder",
-    });
-
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-    return conn;
-  } catch (err) {
-    throw new ApiError(500, "Database connection failed", [], err.stack);
+    await sequelize.authenticate();
+    console.log("MySQL Connected successfully via Sequelize");
+    
+    // Sync models
+    await sequelize.sync({ alter: true }); 
+    
+    return sequelize;
+  } catch (error) {
+    console.error("Unable to connect to the database:", error);
+    process.exit(1);
   }
 };
 
-export { connectDB };
+export { sequelize, connectDB };

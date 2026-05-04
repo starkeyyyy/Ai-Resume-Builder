@@ -15,24 +15,16 @@ $dotenv->load();
 // Setup Database (Eloquent)
 $capsule = new Capsule;
 $capsule->addConnection([
-    'driver'    => $_ENV['DB_CONNECTION'] ?? 'mongodb',
+    'driver'    => $_ENV['DB_CONNECTION'] ?? 'mysql',
     'host'      => $_ENV['DB_HOST'] ?? '127.0.0.1',
-    'port'      => $_ENV['DB_PORT'] ?? '27017',
+    'port'      => $_ENV['DB_PORT'] ?? '3306',
     'database'  => $_ENV['DB_DATABASE'] ?? 'resume_builder',
-    'username'  => $_ENV['DB_USERNAME'] ?? '',
+    'username'  => $_ENV['DB_USERNAME'] ?? 'root',
     'password'  => $_ENV['DB_PASSWORD'] ?? '',
     'charset'   => 'utf8',
     'collation' => 'utf8_unicode_ci',
     'prefix'    => '',
 ]);
-
-// Set the MongoDB resolver if driver is mongodb
-if (($_ENV['DB_CONNECTION'] ?? 'mongodb') === 'mongodb') {
-    $capsule->getDatabaseManager()->extend('mongodb', function($config, $name) {
-        $config['name'] = $name;
-        return new \MongoDB\Laravel\Connection($config);
-    });
-}
 
 $capsule->setAsGlobal();
 $capsule->bootEloquent();

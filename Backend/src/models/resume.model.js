@@ -1,50 +1,61 @@
-import mongoose from "mongoose";
-import educationSchema from "./education.model.js";
-const resumeSchema = new mongoose.Schema({
-  firstName: { type: String, default: "" },
-  lastName: { type: String, default: "" },
-  email: { type: String, default: "" },
-  title: { type: String, required: true },
-  summary: { type: String, default: "" },
-  jobTitle: { type: String, default: "" },
-  phone: { type: String, default: "" },
-  address: { type: String, default: "" },
-  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  experience: [
-    {
-      title: { type: String },
-      companyName: { type: String },
-      city: { type: String },
-      state: { type: String },
-      startDate: { type: String },
-      endDate: { type: String },
-      currentlyWorking: { type: String },
-      workSummary: { type: String },
-    },
-  ],
-  education: [
-    {
-      type: educationSchema,
-    },
-  ],
-  skills: [
-    {
-      name: { type: String },
-      rating: { type: Number },
-    },
-  ],
-  projects: [
-    {
-      projectName: { type: String },
-      techStack: { type: String },
-      projectSummary: { type: String },
-    },
-  ],
-  themeColor: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
+import { DataTypes } from "sequelize";
+import { sequelize } from "../db/index.js";
+import User from "./user.model.js";
+
+const Resume = sequelize.define("Resume", {
+  id: {
+    type: DataTypes.INTEGER,
+    autoIncrement: true,
+    primaryKey: true,
+  },
+  firstName: { type: DataTypes.STRING, defaultValue: "" },
+  lastName: { type: DataTypes.STRING, defaultValue: "" },
+  email: { type: DataTypes.STRING, defaultValue: "" },
+  title: { type: DataTypes.STRING, allowNull: false },
+  summary: { type: DataTypes.TEXT, defaultValue: "" },
+  jobTitle: { type: DataTypes.STRING, defaultValue: "" },
+  phone: { type: DataTypes.STRING, defaultValue: "" },
+  address: { type: DataTypes.STRING, defaultValue: "" },
+  themeColor: { type: DataTypes.STRING, allowNull: false },
+  experience: {
+    type: DataTypes.JSON,
+    defaultValue: [],
+  },
+  education: {
+    type: DataTypes.JSON,
+    defaultValue: [],
+  },
+  skills: {
+    type: DataTypes.JSON,
+    defaultValue: [],
+  },
+  projects: {
+    type: DataTypes.JSON,
+    defaultValue: [],
+  },
+  // Reverting to userId to match Sequelize defaults but keeping it consistent
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: User,
+      key: 'id'
+    }
+  }
+}, {
+  timestamps: true,
 });
 
-const Resume = mongoose.model("Resume", resumeSchema);
+// Define associations
+User.hasMany(Resume, { foreignKey: 'userId', onDelete: 'CASCADE' });
+Resume.belongsTo(User, { foreignKey: 'userId' });
+
+// Add _id and user for frontend compatibility
+Resume.prototype.toJSON = function () {
+  const values = { ...this.get() };
+  values._id = values.id;
+  values.user = values.userId;
+  return values;
+};
 
 export default Resume;

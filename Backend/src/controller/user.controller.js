@@ -29,7 +29,7 @@ const registerUser = async (req, res) => {
   }
 
   try {
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ where: { email } });
 
     if (existingUser) {
       console.log("Registration Failed already registered user");
@@ -50,7 +50,8 @@ const registerUser = async (req, res) => {
         201,
         {
           user: {
-            id: newUser._id,
+            id: newUser.id,
+            _id: newUser.id,
             fullName: newUser.fullName,
             email: newUser.email,
           },
@@ -59,14 +60,12 @@ const registerUser = async (req, res) => {
       )
     );
   } catch (err) {
-    // Change the error parameter to err
     console.log("Registration Failed due to server error");
     console.error("Error while creating user:", err);
     return res
       .status(500)
       .json(new ApiError(500, "Internal Server Error.", [], err.stack));
   }
-  // return res.status(200).send("Hello WOrld")
 };
 
 const loginUser = async (req, res) => {
@@ -86,7 +85,7 @@ const loginUser = async (req, res) => {
   }
 
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ where: { email } });
 
     if (!user) {
       console.log("Login Failed: User not found");
@@ -103,14 +102,14 @@ const loginUser = async (req, res) => {
     const jwtToken = jwt.sign(
       { id: user.id },
       process.env.JWT_SECRET_KEY,
-      { expiresIn: process.env.JWT_SECRET_EXPIRES_IN } // Add token expiration for better security
+      { expiresIn: process.env.JWT_SECRET_EXPIRES_IN }
     );
 
     const cookieOptions = {
       httpOnly: true,
-      expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // Set cookie to expire in 1 day
-      sameSite: process.env.NODE_ENV == "Dev" ? "lax" : "none", // Set SameSite attribute for better security
-      secure: process.env.NODE_ENV == "Dev" ? false : true, // Set Secure attribute for better security
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      sameSite: process.env.NODE_ENV == "Dev" ? "lax" : "none",
+      secure: process.env.NODE_ENV == "Dev" ? false : true,
     };
     
 
@@ -123,7 +122,8 @@ const loginUser = async (req, res) => {
           200,
           {
             user: {
-              id: user._id,
+              id: user.id,
+              _id: user.id,
               email: user.email,
               fullName: user.fullName,
             },
